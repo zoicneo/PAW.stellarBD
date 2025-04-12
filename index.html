@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stellar Birthday Calculator</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <meta name="theme-color" content="#317EFB"/>
+    <style>
+        /* Custom font - Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Add a subtle background pattern or gradient */
+        body {
+            background: linear-gradient(to bottom right, #1a202c, #2d3748); /* Dark gradient */
+        }
+        /* Style for the results list items */
+        .result-item {
+            transition: background-color 0.3s ease;
+        }
+        .result-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        /* Ensure date picker text is visible */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* Make picker icon visible on dark backgrounds */
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
+        <h1 class="text-3xl font-bold mb-6 text-center text-indigo-400">Stellar Birthday Finder</h1>
+
+        <p class="text-gray-400 mb-6 text-center">
+            Enter your birthdate to find out when light from distant stars, which left on that day, will reach Earth!
+        </p>
+
+        <div class="mb-6">
+            <label for="birthdate" class="block text-sm font-medium text-gray-300 mb-2">Your Birthdate:</label>
+            <input type="date" id="birthdate" name="birthdate" required
+                   class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white">
+        </div>
+
+        <button id="calculateBtn"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105">
+            Calculate Stellar Birthdays
+        </button>
+
+        <div id="results" class="mt-8">
+            <h2 class="text-2xl font-semibold mb-4 text-center text-indigo-300">Upcoming Stellar Birthdays:</h2>
+            <ul id="stellarList" class="space-y-3 max-h-60 overflow-y-auto p-4 bg-gray-700 rounded-md">
+                <li class="text-gray-500 italic text-center">Enter your birthdate and click calculate.</li>
+            </ul>
+        </div>
+         <div id="messageBox" class="mt-4 p-3 rounded-md text-center text-sm hidden"></div>
+    </div>
+
+    <footer class="mt-8 text-center text-gray-500 text-sm">
+        Inspired by the concept of Stellar Birthdays. Data uses stars within ~50 light years.
+    </footer>
+
+    <script>
+        // --- Data: Nearby Stars (Name and Distance in Light Years) ---
+        // Source: Simplified list based on common astronomical data.
+        // In a real app, this might come from an API or a larger database.
+        const stars = [
+            { name: "Proxima Centauri", distance: 4.24 },
+            { name: "Alpha Centauri A/B", distance: 4.37 },
+            { name: "Barnard's Star", distance: 5.96 },
+            { name: "Wolf 359", distance: 7.86 },
+            { name: "Lalande 21185", distance: 8.31 },
+            { name: "Sirius A/B", distance: 8.60 },
+            { name: "Luyten 726-8 (UV Ceti)", distance: 8.73 },
+            { name: "Ross 154", distance: 9.69 },
+            { name: "Ross 248", distance: 10.30 },
+            { name: "Epsilon Eridani", distance: 10.50 },
+            { name: "Lacaille 9352", distance: 10.73 },
+            { name: "Ross 128", distance: 11.03 },
+            { name: "EZ Aquarii", distance: 11.26 },
+            { name: "Procyon A/B", distance: 11.44 },
+            { name: "61 Cygni A/B", distance: 11.41 },
+            { name: "Struve 2398 A/B", distance: 11.49 },
+            { name: "Groombridge 34 A/B", distance: 11.62 },
+            { name: "Epsilon Indi", distance: 11.87 },
+            { name: "Tau Ceti", distance: 11.90 },
+            { name: "Kapteyn's Star", distance: 12.78 },
+            { name: "Lacaille 8760", distance: 12.94 },
+            { name: "Kruger 60 A/B", distance: 13.06 },
+            { name: "Ross 614 A/B", distance: 13.39 },
+            { name: "Wolf 424 A/B", distance: 14.21 },
+            { name: "Van Maanen's Star", distance: 14.06 },
+            { name: "Gliese 1", distance: 14.19 },
+            { name: "Wolf 1061", distance: 14.05 },
+            { name: "Luyten's Star", distance: 12.36 },
+            { name: "Gliese 65 A/B (Laland 21185)", distance: 8.31 }, // Duplicate name example
+            { name: "HR 7703 A/B", distance: 16.1 },
+            { name: "Gliese 876", distance: 15.2 },
+            { name: "Gliese 412 A/B", distance: 15.8 },
+            { name: "Gliese 832", distance: 16.2 },
+            { name: "Altair", distance: 16.73 },
+            { name: "Vega", distance: 25.04 },
+            { name: "Fomalhaut", distance: 25.13 },
+            { name: "Pollux", distance: 33.78 },
+            { name: "Arcturus", distance: 36.66 },
+            { name: "Capella A/B", distance: 42.92 },
+            { name: "Aldebaran", distance: 65.23 } // Slightly over 50 for example
+        ];
+
+        // --- DOM Elements ---
+        const birthdateInput = document.getElementById('birthdate');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const stellarList = document.getElementById('stellarList');
+        const messageBox = document.getElementById('messageBox'); // Message box element
+
+        // --- Constants ---
+        const MS_PER_DAY = 1000 * 60 * 60 * 24;
+        const DAYS_PER_YEAR = 365.2425; // Average days per year (accounts for leap years)
+
+        // --- Functions ---
+
+        /**
+         * Displays a message to the user.
+         * @param {string} message - The message text.
+         * @param {string} type - 'success', 'error', or 'info'.
+         */
+        function showMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden', 'bg-red-500', 'bg-green-500', 'bg-blue-500', 'text-white'); // Clear previous styles
+
+            switch (type) {
+                case 'error':
+                    messageBox.classList.add('bg-red-200', 'text-red-800');
+                    break;
+                case 'success':
+                    messageBox.classList.add('bg-green-200', 'text-green-800');
+                    break;
+                default: // info
+                    messageBox.classList.add('bg-blue-200', 'text-blue-800');
+            }
+             messageBox.classList.remove('hidden'); // Show the message box
+        }
+
+        /**
+         * Calculates the stellar birthday date for a given star and birthdate.
+         * @param {Date} birthDateObj - The user's birthdate as a Date object.
+         * @param {number} distanceLY - The star's distance in light years.
+         * @returns {Date} The calculated stellar birthday date.
+         */
+        function calculateStellarBirthday(birthDateObj, distanceLY) {
+            // Calculate the total number of days to add
+            const daysToAdd = distanceLY * DAYS_PER_YEAR;
+
+            // Create a new date object based on the birthdate to avoid modifying the original
+            const stellarBirthday = new Date(birthDateObj.getTime());
+
+            // Add the calculated number of days
+            stellarBirthday.setDate(stellarBirthday.getDate() + Math.round(daysToAdd)); // Round to nearest day
+
+            return stellarBirthday;
+        }
+
+        /**
+         * Formats a Date object into a readable string (e.g., "Jan 1, 2030").
+         * @param {Date} dateObj - The Date object to format.
+         * @returns {string} The formatted date string.
+         */
+        function formatDate(dateObj) {
+            return dateObj.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+        }
+
+        /**
+         * Main function to calculate and display stellar birthdays.
+         */
+        function findStellarBirthdays() {
+            const birthdateValue = birthdateInput.value;
+            if (!birthdateValue) {
+                showMessage('Please enter your birthdate.', 'error');
+                stellarList.innerHTML = '<li class="text-gray-500 italic text-center">Enter your birthdate first.</li>';
+                return;
+            }
+
+            // Clear previous results and messages
+            stellarList.innerHTML = '';
+            messageBox.classList.add('hidden');
+
+            try {
+                // --- Get Birthdate ---
+                // Ensure the date is parsed correctly, considering potential timezone issues.
+                // Splitting the string and using UTC avoids timezone shifts.
+                const [year, month, day] = birthdateValue.split('-').map(Number);
+                const birthDateObj = new Date(Date.UTC(year, month - 1, day)); // Use UTC
+
+                if (isNaN(birthDateObj.getTime())) {
+                    throw new Error("Invalid date entered.");
+                }
+
+                const today = new Date();
+                // Set hours to 0 to compare dates only
+                today.setUTCHours(0, 0, 0, 0);
+
+                // --- Calculate for each star ---
+                const upcomingBirthdays = [];
+                stars.forEach(star => {
+                    const stellarBirthdayDate = calculateStellarBirthday(birthDateObj, star.distance);
+
+                    // Check if the stellar birthday is in the future
+                    if (stellarBirthdayDate >= today) {
+                        upcomingBirthdays.push({
+                            name: star.name,
+                            distance: star.distance,
+                            date: stellarBirthdayDate
+                        });
+                    }
+                });
+
+                // --- Sort by date ---
+                upcomingBirthdays.sort((a, b) => a.date - b.date);
+
+                // --- Display results ---
+                if (upcomingBirthdays.length === 0) {
+                    stellarList.innerHTML = '<li class="text-gray-400 text-center">No upcoming stellar birthdays found based on the provided star list. Perhaps they have all passed!</li>';
+                } else {
+                    upcomingBirthdays.forEach(bday => {
+                        const li = document.createElement('li');
+                        li.className = 'result-item p-3 rounded-md border border-gray-600 flex justify-between items-center';
+                        li.innerHTML = `
+                            <span class="font-semibold text-indigo-300">${bday.name}</span>
+                            <span class="text-sm text-gray-400">(${bday.distance.toFixed(2)} ly)</span>
+                            <span class="text-right text-gray-200">${formatDate(bday.date)}</span>
+                        `;
+                        stellarList.appendChild(li);
+                    });
+                }
+                 showMessage('Calculation complete!', 'success');
+
+            } catch (error) {
+                 console.error("Error calculating birthdays:", error);
+                 showMessage(`Error: ${error.message || 'Could not calculate birthdays.'}`, 'error');
+                 stellarList.innerHTML = '<li class="text-red-400 text-center">Could not calculate birthdays. Please check the date format.</li>';
+            }
+        }
+
+        // --- Event Listeners ---
+        calculateBtn.addEventListener('click', findStellarBirthdays);
+
+        // --- PWA Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+    </script>
+
+</body>
+</html>
