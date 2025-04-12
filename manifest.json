@@ -1,0 +1,24 @@
+{
+  "name": "Stellar Birthday Finder",
+  "short_name": "Stellar Bday",
+  "description": "Calculate your stellar birthdays based on nearby stars.",
+  "start_url": "/index.html", // Or adjust if hosted in a subdirectory
+  "display": "standalone",
+  "background_color": "#2d3748", // Corresponds to bg-gray-800
+  "theme_color": "#4f46e5", // Corresponds to indigo-600
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png", // You need to create these icon files
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512x512.png", // You need to create these icon files
+      "sizes": "512x512",
+      "type": "image/png",
+       "purpose": "any maskable"
+    }
+  ]
+}
