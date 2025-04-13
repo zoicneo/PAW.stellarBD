@@ -9,7 +9,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icons/icon-192x192.png", // You need to create these icon files
+      "src": "icons/icon-192x192.png", // You need to create these icon files 
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
